@@ -1,0 +1,28 @@
+[Unit]
+Description=TGCF - Telegram Message Forwarder Web Service
+After=network.target
+Documentation=https://github.com/aahnik/tgcf
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/github_repos/tgcf
+EnvironmentFile=/home/ubuntu/github_repos/tgcf/.env
+ExecStart=/home/ubuntu/.local/bin/tgcf-web
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=tgcf
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Restart policy
+StartLimitInterval=5min
+StartLimitBurst=4
+
+[Install]
+WantedBy=multi-user.target

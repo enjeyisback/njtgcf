@@ -1,0 +1,155 @@
+#!/bin/bash
+#
+# TGCF Simple Startup Script
+# Usage: ./start
+#
+# This script:
+# - Checks all dependencies
+# - Starts the TGCF service in a tmux session
+# - Verifies the service is running
+# - Is idempotent (safe to run multiple times)
+
+set -e
+
+# Colors for output
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Configuration
+SESSION_NAME="tgcf-service"
+LOG_FILE="tgcf-service.log"
+PROJECT_DIR="/home/ubuntu/github_repos/tgcf"
+
+echo -e "${BLUE}╔════════════════════════════════════════╗${NC}"
+echo -e "${BLUE}║      TGCF Simple Startup Script       ║${NC}"
+echo -e "${BLUE}╔════════════════════════════════════════╗${NC}"
+echo ""
+
+# Step 1: Check dependencies
+echo -e "${YELLOW}[1/4]${NC} Checking dependencies..."
+
+# Check Python
+if ! command -v python3 &> /dev/null; then
+    echo -e "${RED}✗ Python3 not found!${NC}"
+    exit 1
+fi
+echo -e "${GREEN}  ✓ Python3:${NC} $(python3 --version)"
+
+# Check tmux
+if ! command -v tmux &> /dev/null; then
+    echo -e "${YELLOW}  ! tmux not found, installing...${NC}"
+    sudo apt-get update -qq && sudo apt-get install -y tmux -qq
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}  ✓ tmux installed${NC}"
+    else
+        echo -e "${RED}✗ Failed to install tmux${NC}"
+        exit 1
+    fi
+else
+    echo -e "${GREEN}  ✓ tmux:${NC} $(tmux -V)"
+fi
+
+# Check tgcf package
+if ! python3 -c "import tgcf" &> /dev/null; then
+    echo -e "${YELLOW}  ! tgcf package not found, installing...${NC}"
+    cd "$PROJECT_DIR"
+    pip install -e . -q
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}  ✓ tgcf package installed${NC}"
+    else
+        echo -e "${RED}✗ Failed to install tgcf${NC}"
+        exit 1
+    fi
+else
+    echo -e "${GREEN}  ✓ tgcf package installed${NC}"
+fi
+
+# Check .env file
+if [ ! -f "$PROJECT_DIR/.env" ]; then
+    echo -e "${YELLOW}  ! .env file not found, creating default...${NC}"
+    echo "PASSWORD=tgcf" > "$PROJECT_DIR/.env"
+    echo -e "${GREEN}  ✓ Created .env with default password${NC}"
+    echo -e "${YELLOW}  ⚠ WARNING: Change the default password in .env for security!${NC}"
+else
+    echo -e "${GREEN}  ✓ .env file exists${NC}"
+fi
+
+echo ""
+
+# Step 2: Check if service is already running
+echo -e "${YELLOW}[2/4]${NC} Checking service status..."
+
+if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
+    echo -e "${GREEN}  ✓ Service is already running!${NC}"
+    echo -e "${BLUE}  ℹ Service is already active, no need to start again.${NC}"
+    ALREADY_RUNNING=true
+else
+    echo -e "${BLUE}  ℹ Service is not running, will start now...${NC}"
+    ALREADY_RUNNING=false
+fi
+
+echo ""
+
+# Step 3: Start the service (if not running)
+if [ "$ALREADY_RUNNING" = false ]; then
+    echo -e "${YELLOW}[3/4]${NC} Starting TGCF service..."
+    
+    cd "$PROJECT_DIR"
+    
+    # Load environment variables and start in tmux
+    tmux new-session -d -s "$SESSION_NAME" "set -a; source .env; set +a; tgcf-web 2>&1 | tee -a $LOG_FILE"
+    
+    # Wait a moment for service to initialize
+    sleep 3
+    
+    # Verify it started
+    if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
+        echo -e "${GREEN}  ✓ Service started successfully!${NC}"
+    else
+        echo -e "${RED}  ✗ Failed to start service${NC}"
+        echo -e "${YELLOW}  Check logs: tail -f $LOG_FILE${NC}"
+        exit 1
+    fi
+else
+    echo -e "${YELLOW}[3/4]${NC} Skipping start (already running)..."
+fi
+
+echo ""
+
+# Step 4: Display status and access information
+echo -e "${YELLOW}[4/4]${NC} Service Status & Access Information..."
+echo ""
+
+if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
+    echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${GREEN}✓ TGCF Service is RUNNING${NC}"
+    echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo -e "${BLUE}🌐 Web Interface:${NC}"
+    echo -e "   ${YELLOW}http://localhost:8501${NC}"
+    echo ""
+    echo -e "${BLUE}📝 View Logs:${NC}"
+    echo -e "   ${YELLOW}./tgcf-logs.sh${NC}         (last 50 lines)"
+    echo -e "   ${YELLOW}./tgcf-logs.sh -f${NC}      (follow in real-time)"
+    echo -e "   ${YELLOW}tail -f $LOG_FILE${NC}   (direct file access)"
+    echo ""
+    echo -e "${BLUE}🔧 Management Commands:${NC}"
+    echo -e "   ${YELLOW}./tgcf-status.sh${NC}       (check status)"
+    echo -e "   ${YELLOW}./tgcf-stop.sh${NC}         (stop service)"
+    echo -e "   ${YELLOW}./tgcf-restart.sh${NC}      (restart service)"
+    echo ""
+    echo -e "${BLUE}🔐 Default Password:${NC}"
+    echo -e "   ${YELLOW}tgcf${NC} (change in .env file for security)"
+    echo ""
+    echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo -e "${GREEN}✓ Startup complete! Open the web interface to configure.${NC}"
+    echo ""
+else
+    echo -e "${RED}✗ Service is not running${NC}"
+    echo -e "${YELLOW}Check logs for errors: tail -f $LOG_FILE${NC}"
+    exit 1
+fi

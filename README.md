@@ -18,10 +18,79 @@ The ultimate tool to automate custom telegram message forwarding.
 <a href="https://twitter.com/intent/tweet?text=Wow:&amp;url=https%3A%2F%2Fgithub.com%2Faahnik%2Ftgcf"><img src="https://img.shields.io/twitter/url?style=social&amp;url=https%3A%2F%2Fgithub.com%2Faahnik%2Ftgcf" alt="Twitter"></a>
 </p>
 <p align="center">
-<a href="https://github.com/aahnik/tgcf/actions/workflows/quality.yml"><img src="https://github.com/aahnik/tgcf/actions/workflows/quality.yml/badge.svg" alt="Code Quality"></a>
+<a href="https://github.com/aahnik/tgcf/actions/workflows/quality.yml"><img src="https://i.ytimg.com/vi/Rfu7y4017GM/sddefault.jpg" alt="Code Quality"></a>
 </p>
 
  Live-syncer, Auto-poster, backup-bot, cloner, chat-forwarder, duplicator, ... Call it whatever you like! **tgcf** is an advanced telegram chat forwarding automation tool that can fulfill all your custom needs.
+
+---
+
+## 🚀 Quick Start
+
+Get up and running in seconds with our simple startup script!
+
+### Prerequisites
+- Python 3.10 or above
+- Linux, Mac, Windows (WSL-2), or any system with bash support
+
+### One-Command Startup
+
+```bash
+./start
+```
+
+That's it! The startup script will:
+- ✅ Check and install all dependencies
+- ✅ Start the TGCF service in the background
+- ✅ Verify everything is running correctly
+- ✅ Show you the web interface URL and management commands
+
+**The script is idempotent** - safe to run multiple times. If the service is already running, it will just show you the status.
+
+### Access the Web Interface
+
+Once started, open your browser and go to:
+```
+http://localhost:8501
+```
+
+**Default password:** `tgcf` (⚠️ Change this in `.env` for security!)
+
+### Management Commands
+
+After starting, you can manage the service with these simple commands:
+
+```bash
+./tgcf-status.sh    # Check if service is running
+./tgcf-logs.sh      # View recent logs
+./tgcf-logs.sh -f   # Follow logs in real-time
+./tgcf-stop.sh      # Stop the service
+./tgcf-restart.sh   # Restart the service
+```
+
+### State Persistence
+
+Your configuration and session data are automatically saved in:
+- `.env` - Environment variables and password
+- `tgcf.config.json` - Your forwarding configuration
+- `data/` - Telegram session files
+
+The service runs in a detached `tmux` session, so it continues running even if you close your terminal.
+
+### First-Time Setup
+
+1. **Start the service:** `./start`
+2. **Open web interface:** http://localhost:8501
+3. **Enter password:** `tgcf` (default)
+4. **Configure Telegram API:**
+   - Get your API credentials from https://my.telegram.org
+   - Enter them in the "Telegram Login" page
+5. **Set up forwarding rules** in the "Connections" page
+6. **Start forwarding** from the "Run" page
+
+For detailed usage instructions, see [USAGE_INSTRUCTIONS.md](USAGE_INSTRUCTIONS.md) and [SERVICE_MANAGEMENT.md](SERVICE_MANAGEMENT.md).
+
+---
 
 
 ## Features
@@ -135,6 +204,70 @@ Here are some guides for deployment to different cloud providers.
 - [Gitpod](https://github.com/aahnik/tgcf/wiki/Run-for-free-on-Gitpod")
 - [Python Anywhere](https://github.com/aahnik/tgcf/wiki/Run-on-PythonAnywhere)
 - [Google Cloud Run](https://github.com/aahnik/tgcf/wiki/Run-on-Google-Cloud)
+
+## Troubleshooting
+
+### Service Won't Start
+
+If the service fails to start:
+
+1. **Check Python version**: Ensure you have Python 3.10 or above
+   ```bash
+   python3 --version
+   ```
+
+2. **Check if port 8501 is in use**:
+   ```bash
+   lsof -i :8501
+   # Or on some systems:
+   netstat -tulpn | grep 8501
+   ```
+
+3. **View error logs**:
+   ```bash
+   ./tgcf-logs.sh
+   # Or directly:
+   tail -f tgcf-service.log
+   ```
+
+4. **Kill any hanging processes**:
+   ```bash
+   pkill -f tgcf-web
+   pkill -f streamlit
+   ```
+
+5. **Reinstall dependencies**:
+   ```bash
+   pip install -e . --force-reinstall
+   ```
+
+### Can't Access Web Interface
+
+- **Check if service is running**: `./tgcf-status.sh`
+- **Verify the port**: The web interface runs on `http://localhost:8501`
+- **Check firewall settings**: Make sure port 8501 is not blocked
+- **Try a different browser**: Some browser extensions may interfere
+
+### Configuration Not Persisting
+
+- Check that `.env` and `tgcf.config.json` files exist and are writable
+- Ensure the `data/` directory has proper permissions (755)
+- Verify you're running the service from the correct directory
+
+### Service Stops After Terminal Close
+
+- The service should run in a detached tmux session
+- Verify tmux is installed: `tmux -V`
+- Check if the session exists: `tmux ls`
+- If needed, attach to the session: `tmux attach -t tgcf-service`
+
+### Password Issues
+
+- Default password is `tgcf` (set in `.env`)
+- To change it, edit `.env` file: `PASSWORD=your_new_password`
+- After changing password, restart the service: `./tgcf-restart.sh`
+
+For more detailed troubleshooting, see [SERVICE_MANAGEMENT.md](SERVICE_MANAGEMENT.md).
 
 ## Getting Help
 
