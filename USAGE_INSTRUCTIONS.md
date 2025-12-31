@@ -197,6 +197,22 @@ tgcf past  # Start in past mode
   brew install ffmpeg tesseract
   ```
 
+### Issue: Dependency version errors (e.g., jinja2)
+- **Problem:** Error like "Pandas requires version '3.1.2' or newer of 'jinja2'"
+- **Cause:** Running `tgcf-web` directly uses system pip, not the poetry environment
+- **Solution:** Always use `poetry run tgcf-web` or the provided scripts:
+  ```bash
+  # Correct ways to run:
+  poetry run tgcf-web        # Direct execution with poetry
+  ./tgcf-start.sh            # Using the start script
+  ./start                    # Using the simple start script
+  
+  # If dependencies are out of date:
+  poetry install             # Reinstall dependencies
+  poetry lock                # Regenerate lock file if needed
+  ```
+- **Note:** The project includes jinja2>=3.1.2 to ensure pandas compatibility
+
 ### Issue: Need help or found a bug
 - Check the GitHub issues: https://github.com/aahnik/tgcf/issues
 - Join discussions: https://github.com/aahnik/tgcf/discussions
