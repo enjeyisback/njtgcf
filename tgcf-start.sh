@@ -27,7 +27,8 @@ fi
 
 # Start TGCF in a new tmux session
 echo "Starting TGCF service in tmux session: $TMUX_SESSION"
-tmux new-session -d -s "$TMUX_SESSION" -c "$TGCF_DIR" "tgcf-web 2>&1 | tee -a $LOG_FILE"
+# Use poetry run to ensure the correct environment
+tmux new-session -d -s "$TMUX_SESSION" -c "$TGCF_DIR" "poetry run tgcf-web 2>&1 | tee -a $LOG_FILE"
 
 echo "TGCF service started successfully!"
 echo "Session: $TMUX_SESSION"

@@ -53,16 +53,59 @@ else
     echo -e "${GREEN}  ✓ tmux:${NC} $(tmux -V)"
 fi
 
-# Check tgcf package
-if ! python3 -c "import tgcf" &> /dev/null; then
-    echo -e "${YELLOW}  ! tgcf package not found, installing...${NC}"
-    cd "$PROJECT_DIR"
-    pip install -e . -q
-    if [ $? -eq 0 ]; then
-        echo -e "${GREEN}  ✓ tgcf package installed${NC}"
+# Check poetry
+if ! command -v poetry &> /dev/null; then
+    echo -e "${YELLOW}  ! Poetry not found, installing...${NC}"
+    curl -sSL https://install.python-poetry.org | python3 - > /dev/null 2>&1
+    export PATH="$HOME/.local/bin:$PATH"
+    if command -v poetry &> /dev/null; then
+        echo -e "${GREEN}  ✓ Poetry installed${NC}"
     else
-        echo -e "${RED}✗ Failed to install tgcf${NC}"
+        echo -e "${RED}✗ Failed to install Poetry${NC}"
         exit 1
+    fi
+else
+    echo -e "${GREEN}  ✓ Poetry:${NC} $(poetry --version)"
+fi
+
+# Check tgcf package installation
+if ! python3 -c "import tgcf" &> /dev/null; then
+    echo -e "${YELLOW}  ! tgcf package not found, installing with Poetry...${NC}"
+    cd "$PROJECT_DIR"
+    
+    # Remove any existing pip-installed tgcf to avoid conflicts
+    echo -e "${BLUE}    Cleaning up any existing installations...${NC}"
+    pip uninstall -y tgcf > /dev/null 2>&1 || true
+    
+    # Install dependencies using poetry
+    echo -e "${BLUE}    Installing dependencies with Poetry...${NC}"
+    poetry install --no-dev --no-interaction > /dev/null 2>&1
+    
+    if [ $? -eq 0 ]; then
+        # Verify installation
+        if poetry run python3 -c "import tgcf" &> /dev/null; then
+            echo -e "${GREEN}  ✓ tgcf package installed successfully${NC}"
+        else
+            echo -e "${RED}✗ Installation completed but tgcf import failed${NC}"
+            echo -e "${YELLOW}  Try running: cd $PROJECT_DIR && poetry install${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${RED}✗ Failed to install tgcf with Poetry${NC}"
+        echo -e "${YELLOW}  Trying alternative installation with pip...${NC}"
+        
+        # Fallback to pip installation
+        pip uninstall -y tgcf > /dev/null 2>&1 || true
+        pip install -e . --no-deps > /dev/null 2>&1
+        pip install -e . > /dev/null 2>&1
+        
+        if python3 -c "import tgcf" &> /dev/null; then
+            echo -e "${GREEN}  ✓ tgcf installed with pip (fallback)${NC}"
+        else
+            echo -e "${RED}✗ All installation methods failed${NC}"
+            echo -e "${YELLOW}  Please check: poetry install --verbose${NC}"
+            exit 1
+        fi
     fi
 else
     echo -e "${GREEN}  ✓ tgcf package installed${NC}"
@@ -101,7 +144,8 @@ if [ "$ALREADY_RUNNING" = false ]; then
     cd "$PROJECT_DIR"
     
     # Load environment variables and start in tmux
-    tmux new-session -d -s "$SESSION_NAME" "set -a; source .env; set +a; tgcf-web 2>&1 | tee -a $LOG_FILE"
+    # Use poetry run to ensure the correct environment
+    tmux new-session -d -s "$SESSION_NAME" "cd $PROJECT_DIR && set -a; source .env; set +a; poetry run tgcf-web 2>&1 | tee -a $LOG_FILE"
     
     # Wait a moment for service to initialize
     sleep 3
