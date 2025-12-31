@@ -68,6 +68,15 @@ else
     echo -e "${GREEN}  ✓ Poetry:${NC} $(poetry --version)"
 fi
 
+# Check Poetry version compatibility (requires 1.1.12+)
+POETRY_VERSION=$(poetry --version | grep -oP '\d+\.\d+\.\d+' || echo "0.0.0")
+REQUIRED_VERSION="1.1.12"
+if [ "$(printf '%s\n' "$REQUIRED_VERSION" "$POETRY_VERSION" | sort -V | head -n1)" != "$REQUIRED_VERSION" ]; then
+    echo -e "${YELLOW}  ⚠ Poetry version $POETRY_VERSION is below minimum required version $REQUIRED_VERSION${NC}"
+    echo -e "${YELLOW}    Consider upgrading: curl -sSL https://install.python-poetry.org | python3 -${NC}"
+    echo -e "${YELLOW}    See POETRY_COMPATIBILITY.md for details${NC}"
+fi
+
 # Check tgcf package installation
 if ! python3 -c "import tgcf" &> /dev/null; then
     echo -e "${YELLOW}  ! tgcf package not found, installing with Poetry...${NC}"

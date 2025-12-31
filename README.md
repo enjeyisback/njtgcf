@@ -31,7 +31,10 @@ Get up and running in seconds with our simple startup script!
 
 ### Prerequisites
 - Python 3.10 or above
+- Poetry 1.1.12 or above (for dependency management)
 - Linux, Mac, Windows (WSL-2), or any system with bash support
+
+> **📦 Poetry Compatibility:** This project supports both Poetry 1.x and 2.x versions. See [POETRY_COMPATIBILITY.md](POETRY_COMPATIBILITY.md) for details.
 
 ### One-Command Startup
 
