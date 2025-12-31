@@ -26,6 +26,8 @@ cd /home/ubuntu/github_repos/tgcf
 ./tgcf-restart.sh
 ```
 
+> **📍 Note:** All scripts use dynamic path detection. Replace `/home/ubuntu/github_repos/tgcf` with your actual repository location - the scripts will work from any directory!
+
 ## 🌐 Access Web Interface
 
 Once started, access TGCF at:

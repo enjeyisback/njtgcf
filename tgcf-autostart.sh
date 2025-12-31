@@ -2,7 +2,8 @@
 # TGCF Auto-Start Configuration Script
 # This script sets up TGCF to start automatically on system boot/login
 
-TGCF_DIR="/home/ubuntu/github_repos/tgcf"
+# Dynamically detect the project directory (where this script is located)
+TGCF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASHRC="$HOME/.bashrc"
 AUTOSTART_LINE="[ -f \"$TGCF_DIR/tgcf-start.sh\" ] && cd \"$TGCF_DIR\" && ./tgcf-start.sh > /dev/null 2>&1 &"
 

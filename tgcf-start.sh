@@ -4,7 +4,8 @@
 
 set -e
 
-TGCF_DIR="/home/ubuntu/github_repos/tgcf"
+# Dynamically detect the project directory (where this script is located)
+TGCF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TMUX_SESSION="tgcf-service"
 LOG_FILE="$TGCF_DIR/tgcf-service.log"
 

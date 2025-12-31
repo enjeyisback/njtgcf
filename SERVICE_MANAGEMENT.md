@@ -36,6 +36,8 @@ TGCF runs as a background service using **tmux** for session management. This pr
 | `./tgcf-logs.sh -f` | Follow logs in real-time |
 | `./tgcf-autostart.sh` | Configure auto-start on login |
 
+> **📍 Important Note:** All management scripts use **dynamic path detection** and work from any directory where you clone the repository. They automatically detect their location, so there's no need to edit hardcoded paths when deploying to different systems or locations.
+
 ## Management Scripts
 
 ### 1. Starting the Service

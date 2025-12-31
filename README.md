@@ -68,6 +68,8 @@ After starting, you can manage the service with these simple commands:
 ./tgcf-restart.sh   # Restart the service
 ```
 
+> **📍 Portable Scripts:** All scripts now use dynamic path detection, so they work from any directory where you clone the repository. No need to edit paths when moving or deploying to different locations!
+
 ### State Persistence
 
 Your configuration and session data are automatically saved in:

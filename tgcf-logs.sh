@@ -2,7 +2,8 @@
 # TGCF Logs Script
 # This script shows the logs of the TGCF service
 
-TGCF_DIR="/home/ubuntu/github_repos/tgcf"
+# Dynamically detect the project directory (where this script is located)
+TGCF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG_FILE="$TGCF_DIR/tgcf-service.log"
 
 if [ ! -f "$LOG_FILE" ]; then

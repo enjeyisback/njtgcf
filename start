@@ -21,7 +21,8 @@ NC='\033[0m' # No Color
 # Configuration
 SESSION_NAME="tgcf-service"
 LOG_FILE="tgcf-service.log"
-PROJECT_DIR="/home/ubuntu/github_repos/tgcf"
+# Dynamically detect the project directory (where this script is located)
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo -e "${BLUE}╔════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║      TGCF Simple Startup Script       ║${NC}"

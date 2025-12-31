@@ -2,8 +2,9 @@
 # TGCF Status Script
 # This script checks the status of the TGCF service
 
+# Dynamically detect the project directory (where this script is located)
+TGCF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TMUX_SESSION="tgcf-service"
-TGCF_DIR="/home/ubuntu/github_repos/tgcf"
 LOG_FILE="$TGCF_DIR/tgcf-service.log"
 
 echo "========================================="
