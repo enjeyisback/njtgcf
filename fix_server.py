@@ -1,54 +1,68 @@
 import os
-import sys
 import subprocess
-def run_command(command):
-    print(f"Running: {command}")
-    result = subprocess.run(command, shell=True, capture_output=True, text=True)
-    if result.returncode != 0:
-        print(f"Error: {result.stderr}")
-        return False
-    print(result.stdout)
-    return True
-def fix_installation():
-    print("--- TGCF Server Fixer (Root/Absolute Path Version) ---")
+import shutil
+import time
+def run_cmd(cmd, shell=True):
+    print(f"[EXEC] {cmd}")
+    res = subprocess.run(cmd, shell=shell, capture_output=True, text=True)
+    if res.stdout: print(res.stdout.strip())
+    if res.stderr: print(f"[ERR] {res.stderr.strip()}")
+    return res.returncode == 0
+def clean_reinstall():
+    print("=== TGCF Clean Reinstall Tool ===")
     
-    current_dir = os.getcwd() # Should be /home/ubuntu/njtgcf
-    print(f"Current Directory (Source Code): {current_dir}")
+    # 1. Stop everything
+    print("\n--- Step 1: Stopping existing processes ---")
+    run_cmd("pkill -f streamlit")
+    run_cmd("pkill -f tgcf")
+    run_cmd("tmux kill-session -t tgcf-service 2>/dev/null")
+    time.sleep(2)
     
-    # HARDCODED TARGET VENV based on your traceback
-    # Traceback said imports came from here:
-    target_venv = "/home/ubuntu/tgcf/.venv"
-    
-    print(f"Target Venv: {target_venv}")
-    python_exe = os.path.join(target_venv, "bin", "python3")
-    pip_exe = os.path.join(target_venv, "bin", "pip")
-    if not os.path.exists(python_exe):
-        print(f"Error: Could not find virtual environment at {target_venv}")
-        print("Checking for local .venv in current directory...")
-        local_venv = os.path.join(current_dir, ".venv")
-        if os.path.exists(os.path.join(local_venv, "bin", "python3")):
-            print(f"Found local venv at {local_venv}. Using that instead.")
-            python_exe = os.path.join(local_venv, "bin", "python3")
-            pip_exe = os.path.join(local_venv, "bin", "pip")
-        else:
-            print("No suitable venv found. Please ensure you have a venv.")
-            return
-    print(f"Using Python: {python_exe}")
-    
-    # 1. Uninstall existing tgcf from that venv to check libraries
-    print("\nStep 1: Uninstalling old tgcf package (if exists)...")
-    run_command(f"{pip_exe} uninstall -y tgcf")
-    
-    # 2. Install CURRENT directory in editable mode into THAT venv
-    print(f"\nStep 2: Installing {current_dir} in editable mode...")
-    if run_command(f"{pip_exe} install -e ."):
-        print("\nSuccess! Package installed.")
-    else:
-        print("\nFailed to install package.")
+    # 2. Clean old environments
+    # We want to use ~/njtgcf, so let's clean the confusing ~/tgcf/.venv if it exists
+    print("\n--- Step 2: Cleaning old environments ---")
+    old_venv = os.path.expanduser("~/tgcf/.venv")
+    if os.path.exists(old_venv):
+        print(f"Removing old venv: {old_venv}")
+        shutil.rmtree(old_venv, ignore_errors=True)
+        
+    # Clean local .venv in current dir if exists
+    if os.path.exists(".venv"):
+        print("Removing local .venv")
+        shutil.rmtree(".venv", ignore_errors=True)
+    # 3. Setup New Environment
+    print("\n--- Step 3: Setting up fresh environment ---")
+    if not run_cmd("python3 -m venv .venv"):
+        print("Failed to create venv!")
         return
-    # 3. Restart Service
-    print("\nStep 3: Restarting Service...")
-    run_command("systemctl restart tgcf")
-    print("Service restarted.")
+    pip = ".venv/bin/pip"
+    
+    # 4. Install
+    print("\n--- Step 4: Installing dependencies (this may take a minute) ---")
+    run_cmd(f"{pip} install -U pip wheel setuptools")
+    if not run_cmd(f"{pip} install -e ."):
+        print("Failed to install tgcf!")
+        return
+    # 5. Start
+    print("\n--- Step 5: Starting Application ---")
+    # Using the existing start script but ensuring it uses our new venv
+    # We need to make sure tgcf-start.sh uses 'poetry run' or we bypass it.
+    # Since we aren't using poetry explicitly here (we used pip venv), 
+    # let's write a simple start command or use the direct python launch.
+    
+    # Let's try to launch it in tmux directly
+    check_tmux = run_cmd("tmux new-session -d -s tgcf-service '.venv/bin/tgcf-web'")
+    
+    if check_tmux:
+        print("\nSUCCESS! Application started in tmux session 'tgcf-service'.")
+        print("You can verify by visiting your site.")
+        print("View logs with: tmux attach -t tgcf-service")
+    else:
+        print("\nApplication installed but failed to auto-start in tmux.")
+        print("Try running manually: source .venv/bin/activate && tgcf-web")
 if __name__ == "__main__":
-    fix_installation()
+    # Ensure we are in the project dir
+    if not os.path.exists("setup.py") and not os.path.exists("pyproject.toml"):
+        print("ERROR: Please run this script from inside the njtgcf folder.")
+    else:
+        clean_reinstall()
