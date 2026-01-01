@@ -1,0 +1,14 @@
+tgcf
+Running latest tgcf version 1.1.8
+
+
+[12/25/25 08:51:24] INFO     Verbosity turned on! This is suitable for cli.py:57
+                             debugging                                          
+[12/25/25 08:51:25] INFO     cryptg detected, it will be used for      aes.py:19
+                             encryption                                         
+[12/25/25 08:51:26] INFO     tgcf.config.json detected!            config.py:110
+                    WARNING  You have not set a password to        config.py:242
+                             protect the web access to tgcf.                    
+                             The default password `tgcf` is used.               
+                    INFO     config.py got executed                config.py:247
+                    WARNING  Login information not set!            config.py:258

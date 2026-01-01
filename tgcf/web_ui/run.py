@@ -4,7 +4,7 @@ from importlib import resources
 import tgcf.web_ui as wu
 from tgcf.config import CONFIG
 
-package_dir = resources.path(package=wu, resource="").__enter__()
+package_dir = list(wu.__path__)[0]
 
 def main():
     print(package_dir)
